@@ -1,3 +1,3 @@
-export * from './model'
-export * from './repository'
-export * from './sorted-repository'
+export * from "./model"
+export * from "./repository"
+export * from "./sorted-repository"

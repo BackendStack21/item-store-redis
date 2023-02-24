@@ -27,7 +27,7 @@ jobs:
         run: bun i
 
       - name: Linting
-        run: bun x ts-standard --fix
+        run: bun run lint
 
       - name: Run tests
         run: bun run test

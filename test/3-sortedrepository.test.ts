@@ -1,11 +1,11 @@
-import { SortedItem, SortedItemRepository } from '../libs'
-import { describe, expect, test, beforeAll, beforeEach, afterAll, afterEach } from 'bun:test'
-import Redis from 'ioredis'
+import { SortedItem, SortedItemRepository } from "../libs"
+import { describe, expect, test, beforeAll, beforeEach, afterAll, afterEach } from "bun:test"
+import Redis from "ioredis"
 
-describe('SortedItemRepository', () => {
+describe("SortedItemRepository", () => {
   const redis: Redis = new Redis({
-    host: process.env.REDIS_HOST ?? 'localhost',
-    port: parseInt(process.env.REDIS_PORT ?? '6379')
+    host: process.env.REDIS_HOST ?? "localhost",
+    port: parseInt(process.env.REDIS_PORT ?? "6379"),
   })
 
   let repository: SortedItemRepository
@@ -27,35 +27,35 @@ describe('SortedItemRepository', () => {
     repository = new SortedItemRepository(name, redis)
   })
 
-  test('should add a new item to the repository', async () => {
-    const item = new SortedItem({ foo: 'bar' })
+  test("should add a new item to the repository", async () => {
+    const item = new SortedItem({ foo: "bar" })
     await repository.add(item)
 
     const result = await repository.getById(item.id)
     expect(result).toEqual(item)
   })
 
-  test('should update an item in the repository', async () => {
-    const item = new SortedItem({ foo: 'bar' })
+  test("should update an item in the repository", async () => {
+    const item = new SortedItem({ foo: "bar" })
     await repository.add(item)
 
     let result = await repository.getById(item.id)
     expect(result).toEqual(item)
 
-    await repository.updateById(item.id, 'update')
+    await repository.updateById(item.id, "update")
     result = await repository.getById(item.id)
-    expect(result?.data).toEqual('update')
+    expect(result?.data).toEqual("update")
     expect(result?.id).toEqual(item.id)
     expect((result as SortedItem).score).toEqual(item.score)
   })
 
-  test('should return null for a non-existent id', async () => {
-    const result = await repository.getById('invalid-id')
+  test("should return null for a non-existent id", async () => {
+    const result = await repository.getById("invalid-id")
     expect(result).toBeNull()
   })
 
-  test('should return the item for an existing id', async () => {
-    const item = new SortedItem({ foo: 'bar' })
+  test("should return the item for an existing id", async () => {
+    const item = new SortedItem({ foo: "bar" })
     await repository.add(item)
 
     expect(1).toEqual(await repository.count())
@@ -64,17 +64,13 @@ describe('SortedItemRepository', () => {
     expect(result).toEqual(item)
   })
 
-  test('should return an empty array for an empty repository', async () => {
+  test("should return an empty array for an empty repository", async () => {
     const result = await repository.getAll()
     expect(result).toEqual([])
   })
 
-  test('should return all items in the repository', async () => {
-    const items = [
-      new SortedItem({ foo: 'bar' }),
-      new SortedItem({ baz: 'qux' }),
-      new SortedItem({ quux: 'corge' })
-    ]
+  test("should return all items in the repository", async () => {
+    const items = [new SortedItem({ foo: "bar" }), new SortedItem({ baz: "qux" }), new SortedItem({ quux: "corge" })]
 
     for (const item of items) {
       await repository.add(item)
@@ -86,19 +82,19 @@ describe('SortedItemRepository', () => {
     expect(result).toEqual(items)
   })
 
-  test('should return an empty array for an empty repository', async () => {
+  test("should return an empty array for an empty repository", async () => {
     const result = await repository.getPaginated(1, 10)
     expect(result).toEqual({ items: [], count: 0 })
   })
 
-  test('should return the correct page of items from the repository', async () => {
+  test("should return the correct page of items from the repository", async () => {
     const items = [
-      new SortedItem({ foo: 'bar' }),
-      new SortedItem({ baz: 'qux' }),
-      new SortedItem({ quux: 'corge' }),
-      new SortedItem({ grault: 'garply' }),
-      new SortedItem({ waldo: 'fred' }),
-      new SortedItem({ plugh: 'xyzzy' })
+      new SortedItem({ foo: "bar" }),
+      new SortedItem({ baz: "qux" }),
+      new SortedItem({ quux: "corge" }),
+      new SortedItem({ grault: "garply" }),
+      new SortedItem({ waldo: "fred" }),
+      new SortedItem({ plugh: "xyzzy" }),
     ]
 
     for (const item of items) {
@@ -110,15 +106,15 @@ describe('SortedItemRepository', () => {
     expect(result.items).toEqual([items[2], items[3]])
   })
 
-  test('should get paginated items', async () => {
+  test("should get paginated items", async () => {
     const items = [
-      new SortedItem({ foo: 'bar' }),
-      new SortedItem({ baz: 'qux' }),
-      new SortedItem({ quux: 'corge' }),
-      new SortedItem({ grault: 'garply' }),
-      new SortedItem({ waldo: 'fred' }),
-      new SortedItem({ plugh: 'xyzzy' }),
-      new SortedItem({ plugh: 'json' })
+      new SortedItem({ foo: "bar" }),
+      new SortedItem({ baz: "qux" }),
+      new SortedItem({ quux: "corge" }),
+      new SortedItem({ grault: "garply" }),
+      new SortedItem({ waldo: "fred" }),
+      new SortedItem({ plugh: "xyzzy" }),
+      new SortedItem({ plugh: "json" }),
     ]
 
     for (const item of items) {
@@ -138,19 +134,19 @@ describe('SortedItemRepository', () => {
     expect(result3.count).toBe(7)
   })
 
-  test('should check if item exists', async () => {
-    const item = new SortedItem({ foo: 'bar' })
+  test("should check if item exists", async () => {
+    const item = new SortedItem({ foo: "bar" })
     await repository.add(item)
 
     const result1 = await repository.hasItem(item.id)
     expect(result1).toBe(true)
 
-    const result2 = await repository.hasItem('not-found')
+    const result2 = await repository.hasItem("not-found")
     expect(result2).toBe(false)
   })
 
-  test('should delete an item', async () => {
-    const item = new SortedItem({ foo: 'bar' })
+  test("should delete an item", async () => {
+    const item = new SortedItem({ foo: "bar" })
     await repository.add(item)
 
     await repository.deleteById(item.id)
@@ -159,16 +155,16 @@ describe('SortedItemRepository', () => {
     expect(result).toEqual([])
   })
 
-  test('should delete page', async () => {
+  test("should delete page", async () => {
     const items = [
-      new SortedItem({ foo: 'bar' }),
-      new SortedItem({ baz: 'qux' }),
-      new SortedItem({ quux: 'corge' }),
-      new SortedItem({ grault: 'garply' }),
-      new SortedItem({ waldo: 'fred' }),
-      new SortedItem({ plugh: 'xyzzy' }),
-      new SortedItem({ plugh: 'xml' }),
-      new SortedItem({ plugh: 'json' })
+      new SortedItem({ foo: "bar" }),
+      new SortedItem({ baz: "qux" }),
+      new SortedItem({ quux: "corge" }),
+      new SortedItem({ grault: "garply" }),
+      new SortedItem({ waldo: "fred" }),
+      new SortedItem({ plugh: "xyzzy" }),
+      new SortedItem({ plugh: "xml" }),
+      new SortedItem({ plugh: "json" }),
     ]
 
     for (const item of items) {
@@ -184,8 +180,8 @@ describe('SortedItemRepository', () => {
     expect(await repository.hasItem(items[7].id)).toBe(false)
   })
 
-  test('should delete all items', async () => {
-    const item = new SortedItem({ foo: 'bar' })
+  test("should delete all items", async () => {
+    const item = new SortedItem({ foo: "bar" })
     await repository.add(item)
 
     await repository.deleteAll()
@@ -194,7 +190,7 @@ describe('SortedItemRepository', () => {
     expect(result).toEqual([])
   })
 
-  test('should delete all multiple times', async () => {
+  test("should delete all multiple times", async () => {
     await repository.deleteAll()
     await repository.deleteAll()
     await repository.deleteAll()

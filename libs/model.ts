@@ -1,16 +1,16 @@
-import { monotonicFactory, decodeTime } from 'ulidx'
-import { Redis, Cluster } from 'ioredis'
+import { monotonicFactory, decodeTime } from "ulidx"
+import { Redis, Cluster } from "ioredis"
 const ulid = monotonicFactory()
 
 export interface IItem {
   id: string
-  data: any
+  data: unknown
 }
 
 export class SortedItem implements IItem {
   public readonly score: number
 
-  constructor (public readonly data: any, public readonly id: string = ulid()) {
+  constructor(public readonly data: unknown, public readonly id: string = ulid()) {
     this.score = decodeTime(ulid())
   }
 }
@@ -36,7 +36,7 @@ export interface ISortedItemRepository {
   name: string
   redis: Redis | Cluster
   add: (item: SortedItem) => Promise<void>
-  updateById: (id: string, data: any) => Promise<boolean>
+  updateById: (id: string, data: unknown) => Promise<boolean>
   getById: (id: string) => Promise<IItem | null>
   getAll: () => Promise<IItem[]>
   getPaginated: (page: number, pageSize: number) => Promise<IPaginatedItems>
