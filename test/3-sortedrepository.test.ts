@@ -3,7 +3,11 @@ import { describe, expect, test, beforeAll, beforeEach, afterAll, afterEach } fr
 import Redis from 'ioredis'
 
 describe('SortedItemRepository', () => {
-  const redis: Redis = new Redis({ host: 'localhost', port: 6379 })
+  const redis: Redis = new Redis({
+    host: process.env.REDIS_HOST ?? 'localhost',
+    port: parseInt(process.env.REDIS_PORT ?? '6379')
+  })
+
   let repository: SortedItemRepository
 
   afterEach(async () => {
