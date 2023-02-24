@@ -1,0 +1,42 @@
+{
+  "name": "item-store-redis",
+  "version": "0.1.0",
+  "description": "This module provides classes that implement repositories for storing and retrieving data in a Redis database",
+  "main": "dist/libs/index.js",
+  "types": "dist/libs/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "format": "ts-standard --fix",
+    "test": "bun test test/*.test.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BackendStack21/item-store-redis.git"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "libs/",
+    "dist/libs"
+  ],
+  "keywords": ["redis", "ioredis", "item", "repository", "pagination"],
+  "author": "Rolando Santamaria Maso <kyberneees@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BackendStack21/item-store-redis/issues"
+  },
+  "homepage": "https://github.com/BackendStack21/item-store-redis#readme",
+  "dependencies": {
+    "ioredis": "^5.3.1",
+    "ulidx": "^0.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.5",
+    "bun-types": "^0.5.6"
+  },
+  "ts-standard": {
+    "ignore": [
+      "dist"
+    ]
+  }
+}
