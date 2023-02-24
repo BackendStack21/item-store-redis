@@ -1,14 +1,14 @@
-import Redis, { Cluster } from 'ioredis'
-import { IItem, IItemRepository, IPaginatedItems } from './model'
+import Redis, { Cluster } from "ioredis"
+import { IItem, IItemRepository, IPaginatedItems } from "./model"
 
 export class ItemRepository implements IItemRepository {
   private readonly keyPrefix: string
 
-  constructor (public readonly name: string, public readonly redis: Redis | Cluster = new Redis()) {
+  constructor(public readonly name: string, public readonly redis: Redis | Cluster = new Redis()) {
     this.keyPrefix = `items:${name}:`
   }
 
-  async set (item: IItem, expirationInSeconds?: number): Promise<void> {
+  async set(item: IItem, expirationInSeconds?: number): Promise<void> {
     const key = this.getKey(item.id)
     const value = JSON.stringify(item)
     if (expirationInSeconds != null) {
@@ -18,14 +18,14 @@ export class ItemRepository implements IItemRepository {
     }
   }
 
-  async getById (id: string): Promise<IItem | null> {
+  async getById(id: string): Promise<IItem | null> {
     const key = this.getKey(id)
     const result = await this.redis.get(key)
     return result != null ? (JSON.parse(result) as IItem) : null
   }
 
-  async getAll (): Promise<IItem[]> {
-    const keys = await this.redis.keys(this.getKey('*'))
+  async getAll(): Promise<IItem[]> {
+    const keys = await this.redis.keys(this.getKey("*"))
     if (keys.length === 0) {
       return []
     }
@@ -34,8 +34,8 @@ export class ItemRepository implements IItemRepository {
     return items.map((item) => JSON.parse(item as string)) as IItem[]
   }
 
-  async getPaginated (page: number, pageSize: number): Promise<IPaginatedItems> {
-    const keys = await this.redis.keys(this.getKey('*'))
+  async getPaginated(page: number, pageSize: number): Promise<IPaginatedItems> {
+    const keys = await this.redis.keys(this.getKey("*"))
     const count = keys.length
     const start = (page - 1) * pageSize
     const end = start + pageSize - 1
@@ -43,7 +43,7 @@ export class ItemRepository implements IItemRepository {
     if (itemKeys.length === 0) {
       return {
         items: [],
-        count: 0
+        count: 0,
       }
     }
 
@@ -52,28 +52,28 @@ export class ItemRepository implements IItemRepository {
 
     return {
       items: parsedItems,
-      count
+      count,
     }
   }
 
-  async hasItem (id: string): Promise<boolean> {
+  async hasItem(id: string): Promise<boolean> {
     const key = this.getKey(id)
-    return await this.redis.exists(key) === 1
+    return (await this.redis.exists(key)) === 1
   }
 
-  async deleteById (id: string): Promise<void> {
+  async deleteById(id: string): Promise<void> {
     const key = this.getKey(id)
     await this.redis.del(key)
   }
 
-  async deleteAll (): Promise<void> {
-    const keys = await this.redis.keys(this.getKey('*'))
+  async deleteAll(): Promise<void> {
+    const keys = await this.redis.keys(this.getKey("*"))
     if (keys.length > 0) {
       await this.redis.del(keys)
     }
   }
 
-  private getKey (id: string): string {
+  private getKey(id: string): string {
     return `${this.keyPrefix}${id}`
   }
 }

@@ -1,0 +1,30 @@
+name: tests
+on: [push, pull_request]
+
+jobs:
+  
+  testing:
+    services:
+      redis:
+        image: redis
+        ports:
+        - 6379:6379
+        options: --entrypoint redis-server
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup Environment (Bun latest)
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun i
+
+      - name: Linting
+        run: bun run lint
+
+      - name: Run tests
+        run: bun run test
+        

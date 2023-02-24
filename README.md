@@ -71,7 +71,7 @@ interface ISortedItemRepository {
   name: string
   redis: Redis | Cluster
   add(item: SortedItem): Promise<void>
-  updateById(id: string, data: any): Promise<boolean>
+  updateById(id: string, data: unknown): Promise<boolean>
   getById(id: string): Promise<IItem | null>
   getAll(): Promise<IItem[]>
   getPaginated(page: number, pageSize: number): Promise<IPaginatedItems>
