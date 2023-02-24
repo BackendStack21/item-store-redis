@@ -6,7 +6,7 @@
   "types": "dist/libs/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "lint": "bun x rome check . && bun x rome format . --semicolons=as-needed",
+    "lint": "bun x rome ci . --semicolons=as-needed",
     "format": "bun x rome format . --semicolons=as-needed --write",
     "test": "bun test test/*.test.ts"
   },

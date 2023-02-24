@@ -5,7 +5,7 @@ import Redis from "ioredis"
 describe("SortedItemRepository", () => {
   const redis: Redis = new Redis({
     host: "127.0.0.1",
-    port: 6379
+    port: 6379,
   })
 
   let repository: SortedItemRepository
