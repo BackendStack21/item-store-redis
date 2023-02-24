@@ -5,8 +5,8 @@ import Redis from "ioredis"
 describe("ItemRepository", () => {
   let repository: ItemRepository
   const redis: Redis = new Redis({
-    host: process.env.REDIS_HOST ?? "localhost",
-    port: parseInt(process.env.REDIS_PORT ?? "6379"),
+    host: Bun.env.REDIS_HOST ?? "localhost",
+    port: parseInt(Bun.env.REDIS_PORT ?? "6379"),
   })
 
   beforeAll(async () => {
