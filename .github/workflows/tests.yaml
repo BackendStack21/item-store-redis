@@ -27,6 +27,4 @@ jobs:
 
       - name: Run tests
         run: bun run test
-        env:
-          REDIS_HOST: redis
-          REDIS_PORT: 6379
+        

@@ -4,8 +4,8 @@ import Redis from "ioredis"
 
 describe("SortedItemRepository", () => {
   const redis: Redis = new Redis({
-    host: Bun.env.REDIS_HOST ?? "localhost",
-    port: parseInt(Bun.env.REDIS_PORT ?? "6379"),
+    host: "127.0.0.1",
+    port: 6379
   })
 
   let repository: SortedItemRepository
