@@ -7,6 +7,8 @@
 
 <img src="illustration.svg" width="400">  
 
+> Explanatory article: https://medium.com/@kyberneees/introducing-item-store-redis-a-high-performance-redis-based-item-store-for-efficient-data-4510d4e9fcf9
+
 This module provides classes that implement repositories for storing and retrieving data in a Redis database:
 
 - `ItemRepository`: The class provides basic functionality for storing and retrieving individual items, as well as querying all items or a subset of items in a paginated manner. The items are stored in Redis using a key-value data model with expiration support. 
