@@ -8,7 +8,7 @@ describe("SortedItem", () => {
     expect(item.data).toBe("test")
   })
 
-  test("toScore returns a number", () => {
+  test("score is a number", () => {
     const item = new SortedItem("test")
     expect(typeof item.score).toBe("number")
   })
