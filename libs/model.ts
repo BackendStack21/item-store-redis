@@ -1,5 +1,5 @@
-import { monotonicFactory, decodeTime } from "ulidx"
-import { Redis, Cluster } from "ioredis"
+import { monotonicFactory, decodeTime } from 'ulidx'
+import { Redis, Cluster } from 'ioredis'
 const ulid = monotonicFactory()
 
 export interface IItem {

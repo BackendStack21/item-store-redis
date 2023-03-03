@@ -8,6 +8,12 @@
             "dist"
         ]
     },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single",
+            "trailingComma": "none"
+        }
+    },
     "linter": {
         "enabled": true,
         "ignore": [

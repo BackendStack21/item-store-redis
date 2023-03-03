@@ -1,5 +1,5 @@
-import Redis, { Cluster } from "ioredis"
-import { IItem, IPaginatedItems, ISortedItemRepository, SortedItem } from "./model"
+import Redis, { Cluster } from 'ioredis'
+import { IItem, IPaginatedItems, ISortedItemRepository, SortedItem } from './model'
 
 export class SortedItemRepository implements ISortedItemRepository {
   private readonly keyPrefix: string
@@ -16,7 +16,7 @@ export class SortedItemRepository implements ISortedItemRepository {
 
     await Promise.all([
       await this.redis.hset(this.hashPrefix, item.id, hashData),
-      await this.redis.zadd(this.keyPrefix, score, item.id),
+      await this.redis.zadd(this.keyPrefix, score, item.id)
     ])
   }
 
@@ -56,7 +56,7 @@ export class SortedItemRepository implements ISortedItemRepository {
     if (keys.length === 0) {
       return {
         items: [],
-        count: 0,
+        count: 0
       }
     }
 
@@ -65,7 +65,7 @@ export class SortedItemRepository implements ISortedItemRepository {
 
     return {
       items: parsedItems,
-      count,
+      count
     }
   }
 

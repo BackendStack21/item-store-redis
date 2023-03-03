@@ -1,10 +1,10 @@
-import { ItemRepository, SortedItemRepository } from "../libs"
-import { Redis } from "ioredis"
-import { SortedItem } from "../libs/model"
+import { ItemRepository, SortedItemRepository } from '../libs'
+import { Redis } from 'ioredis'
+import { SortedItem } from '../libs/model'
 
-const redis = new Redis({ host: "localhost", port: 6379 })
-const repository = new ItemRepository("unsorted", redis)
-const sortedRepository = new SortedItemRepository("sorted", redis)
+const redis = new Redis({ host: 'localhost', port: 6379 })
+const repository = new ItemRepository('unsorted', redis)
+const sortedRepository = new SortedItemRepository('sorted', redis)
 
 async function benchUnsorted(): Promise<void> {
   for (let index = 0; index <= 100_000; index++) {

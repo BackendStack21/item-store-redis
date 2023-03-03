@@ -1,5 +1,5 @@
-import Redis, { Cluster } from "ioredis"
-import { IItem, IItemRepository, IPaginatedItems } from "./model"
+import Redis, { Cluster } from 'ioredis'
+import { IItem, IItemRepository, IPaginatedItems } from './model'
 
 export class ItemRepository implements IItemRepository {
   private readonly keyPrefix: string
@@ -25,7 +25,7 @@ export class ItemRepository implements IItemRepository {
   }
 
   async getAll(): Promise<IItem[]> {
-    const keys = await this.redis.keys(this.getKey("*"))
+    const keys = await this.redis.keys(this.getKey('*'))
     if (keys.length === 0) {
       return []
     }
@@ -35,7 +35,7 @@ export class ItemRepository implements IItemRepository {
   }
 
   async getPaginated(page: number, pageSize: number): Promise<IPaginatedItems> {
-    const keys = await this.redis.keys(this.getKey("*"))
+    const keys = await this.redis.keys(this.getKey('*'))
     const count = keys.length
     const start = (page - 1) * pageSize
     const end = start + pageSize - 1
@@ -43,7 +43,7 @@ export class ItemRepository implements IItemRepository {
     if (itemKeys.length === 0) {
       return {
         items: [],
-        count: 0,
+        count: 0
       }
     }
 
@@ -52,7 +52,7 @@ export class ItemRepository implements IItemRepository {
 
     return {
       items: parsedItems,
-      count,
+      count
     }
   }
 
@@ -67,7 +67,7 @@ export class ItemRepository implements IItemRepository {
   }
 
   async deleteAll(): Promise<void> {
-    const keys = await this.redis.keys(this.getKey("*"))
+    const keys = await this.redis.keys(this.getKey('*'))
     if (keys.length > 0) {
       await this.redis.del(keys)
     }

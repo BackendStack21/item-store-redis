@@ -1,12 +1,12 @@
-import { IItem, ItemRepository } from "../libs"
-import { describe, expect, test, beforeAll, beforeEach, afterAll, afterEach } from "bun:test"
-import Redis from "ioredis"
+import { IItem, ItemRepository } from '../libs'
+import { describe, expect, test, beforeAll, beforeEach, afterAll, afterEach } from 'bun:test'
+import Redis from 'ioredis'
 
-describe("ItemRepository", () => {
+describe('ItemRepository', () => {
   let repository: ItemRepository
   const redis: Redis = new Redis({
-    host: "127.0.0.1",
-    port: 6379,
+    host: '127.0.0.1',
+    port: 6379
   })
 
   beforeAll(async () => {
@@ -26,16 +26,16 @@ describe("ItemRepository", () => {
     redis.disconnect()
   })
 
-  test("should add and get an item", async () => {
-    const item: IItem = { id: "test", data: "test" }
+  test('should add and get an item', async () => {
+    const item: IItem = { id: 'test', data: 'test' }
     await repository.set(item)
 
-    const result = await repository.getById("test")
+    const result = await repository.getById('test')
     expect(result).toEqual(item)
   })
 
-  test("should set an expiration if specified", async () => {
-    const item: IItem = { data: "bar", id: "expiring-item" }
+  test('should set an expiration if specified', async () => {
+    const item: IItem = { data: 'bar', id: 'expiring-item' }
     const expirationInSeconds = 1
 
     await repository.set(item, expirationInSeconds)
@@ -45,11 +45,11 @@ describe("ItemRepository", () => {
     expect(result).toBeNull()
   })
 
-  test("should get all items", async () => {
+  test('should get all items', async () => {
     const items: IItem[] = [
-      { id: "test1", data: "test1" },
-      { id: "test2", data: "test2" },
-      { id: "test3", data: "test3" },
+      { id: 'test1', data: 'test1' },
+      { id: 'test2', data: 'test2' },
+      { id: 'test3', data: 'test3' }
     ]
 
     for (const item of items) {
@@ -62,15 +62,15 @@ describe("ItemRepository", () => {
     }
   })
 
-  test("should get paginated items", async () => {
+  test('should get paginated items', async () => {
     const items: IItem[] = [
-      { id: "test1", data: "test1" },
-      { id: "test2", data: "test2" },
-      { id: "test3", data: "test3" },
-      { id: "test4", data: "test4" },
-      { id: "test5", data: "test5" },
-      { id: "test6", data: "test6" },
-      { id: "test7", data: "test7" },
+      { id: 'test1', data: 'test1' },
+      { id: 'test2', data: 'test2' },
+      { id: 'test3', data: 'test3' },
+      { id: 'test4', data: 'test4' },
+      { id: 'test5', data: 'test5' },
+      { id: 'test6', data: 'test6' },
+      { id: 'test7', data: 'test7' }
     ]
 
     for (const item of items) {
@@ -90,29 +90,29 @@ describe("ItemRepository", () => {
     expect(result3.count).toBe(7)
   })
 
-  test("should check if item exists", async () => {
-    const item: IItem = { id: "test", data: "test" }
+  test('should check if item exists', async () => {
+    const item: IItem = { id: 'test', data: 'test' }
     await repository.set(item)
 
-    const result1 = await repository.hasItem("test")
+    const result1 = await repository.hasItem('test')
     expect(result1).toBe(true)
 
-    const result2 = await repository.hasItem("not-found")
+    const result2 = await repository.hasItem('not-found')
     expect(result2).toBe(false)
   })
 
-  test("should delete an item", async () => {
-    const item: IItem = { id: "test", data: "test" }
+  test('should delete an item', async () => {
+    const item: IItem = { id: 'test', data: 'test' }
     await repository.set(item)
 
-    await repository.deleteById("test")
+    await repository.deleteById('test')
 
     const result = await repository.getAll()
     expect(result).toEqual([])
   })
 
-  test("should delete all items", async () => {
-    const item: IItem = { id: "test", data: "test" }
+  test('should delete all items', async () => {
+    const item: IItem = { id: 'test', data: 'test' }
     await repository.set(item)
 
     await repository.deleteAll()
@@ -121,7 +121,7 @@ describe("ItemRepository", () => {
     expect(result).toEqual([])
   })
 
-  test("should delete all multiple times", async () => {
+  test('should delete all multiple times', async () => {
     await repository.deleteAll()
     await repository.deleteAll()
     await repository.deleteAll()
