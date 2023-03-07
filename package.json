@@ -6,8 +6,8 @@
   "types": "dist/libs/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "lint": "bun x rome ci . --semicolons=as-needed",
-    "format": "bun x rome format . --semicolons=as-needed --write",
+    "lint": "bun x rome ci .",
+    "format": "bun x rome format . --write",
     "test": "bun test test/*.test.ts"
   },
   "repository": {
