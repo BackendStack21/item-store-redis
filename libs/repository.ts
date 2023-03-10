@@ -1,40 +1,49 @@
 import Redis, { Cluster } from 'ioredis'
 import { IItem, IItemRepository, IPaginatedItems } from './model'
+import { encode, decode } from 'msgpack-lite'
 
-export class ItemRepository implements IItemRepository {
+export function bufferToItem<T>(buffer: Buffer | null): IItem<T> | null {
+  if (!buffer) return null
+
+  const item = decode(buffer) as IItem<T>
+  return item
+}
+
+export class ItemRepository<T> implements IItemRepository<T> {
   private readonly keyPrefix: string
 
   constructor(public readonly name: string, public readonly redis: Redis | Cluster = new Redis()) {
     this.keyPrefix = `items:${name}:`
   }
 
-  async set(item: IItem, expirationInSeconds?: number): Promise<void> {
+  async set(item: IItem<T>, expirationInSeconds?: number): Promise<void> {
     const key = this.getKey(item.id)
-    const value = JSON.stringify(item)
+    const buffer = encode(item)
     if (expirationInSeconds != null) {
-      await this.redis.setex(key, expirationInSeconds, value)
+      await this.redis.setex(key, expirationInSeconds, buffer)
     } else {
-      await this.redis.set(key, value)
+      await this.redis.set(key, buffer)
     }
   }
 
-  async getById(id: string): Promise<IItem | null> {
+  async getById(id: string): Promise<IItem<T> | null> {
     const key = this.getKey(id)
-    const result = await this.redis.get(key)
-    return result != null ? (JSON.parse(result) as IItem) : null
+    const result = await this.redis.getBuffer(key)
+
+    return bufferToItem(result) as IItem<T>
   }
 
-  async getAll(): Promise<IItem[]> {
+  async getAll(): Promise<IItem<T>[]> {
     const keys = await this.redis.keys(this.getKey('*'))
     if (keys.length === 0) {
       return []
     }
+    const buffers = await this.redis.mgetBuffer(keys)
 
-    const items = await this.redis.mget(keys)
-    return items.map((item) => JSON.parse(item as string)) as IItem[]
+    return buffers.map((b) => bufferToItem(b) as IItem<T>)
   }
 
-  async getPaginated(page: number, pageSize: number): Promise<IPaginatedItems> {
+  async getPaginated(page: number, pageSize: number): Promise<IPaginatedItems<T>> {
     const keys = await this.redis.keys(this.getKey('*'))
     const count = keys.length
     const start = (page - 1) * pageSize
@@ -47,11 +56,11 @@ export class ItemRepository implements IItemRepository {
       }
     }
 
-    const items = await this.redis.mget(itemKeys)
-    const parsedItems = items.map((item) => JSON.parse(item as string)) as IItem[]
+    const buffers = await this.redis.mgetBuffer(itemKeys)
+    const items = buffers.map((b) => bufferToItem(b) as IItem<T>) as IItem<T>[]
 
     return {
-      items: parsedItems,
+      items,
       count
     }
   }
