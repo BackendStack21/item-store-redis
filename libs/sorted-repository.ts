@@ -1,7 +1,12 @@
-import Redis, { Cluster } from 'ioredis'
-import { IItem, IPaginatedItems, ISortedItemRepository, SortedItem } from './model'
+import { IItem, IPaginatedItems, ISortedItemRepository } from './model'
+import { monotonicFactory, decodeTime } from 'ulidx'
+import { Redis, Cluster } from 'ioredis'
+import { encode } from 'msgpack-lite'
+import { bufferToItem } from './repository'
 
-export class SortedItemRepository implements ISortedItemRepository {
+const ulid = monotonicFactory()
+
+export class SortedItemRepository<T> implements ISortedItemRepository<T> {
   private readonly keyPrefix: string
   private readonly hashPrefix: string
 
@@ -10,45 +15,54 @@ export class SortedItemRepository implements ISortedItemRepository {
     this.hashPrefix = `items-data:${name}:`
   }
 
-  async add(item: SortedItem): Promise<void> {
-    const score = item.score
-    const hashData = JSON.stringify(item)
+  async set(item: IItem<T>): Promise<void> {
+    if (await this.hasItem(item.id)) {
+      await this.redis.zrem(this.keyPrefix, item.id)
+    }
+    const score = decodeTime(ulid())
+    const buffer = encode(item)
 
     await Promise.all([
-      await this.redis.hset(this.hashPrefix, item.id, hashData),
+      await this.redis.hset(this.hashPrefix, item.id, buffer),
       await this.redis.zadd(this.keyPrefix, score, item.id)
     ])
   }
 
-  async updateById(id: string, data: unknown): Promise<boolean> {
-    const item = await this.getById(id)
-    if (item == null) return false
+  async getById(id: string): Promise<IItem<T> | null> {
+    const payload = await this.redis.hgetBuffer(this.hashPrefix, id)
 
-    item.data = data
-    const hashData = JSON.stringify(item)
-    await this.redis.hset(this.hashPrefix, id, hashData)
-
-    return true
+    return bufferToItem(payload)
   }
 
-  async getById(id: string): Promise<IItem | null> {
-    const hashData = await this.redis.hget(this.hashPrefix, id)
-
-    return hashData != null ? (JSON.parse(hashData) as IItem) : null
-  }
-
-  async getAll(): Promise<IItem[]> {
+  async getAll(): Promise<IItem<T>[]> {
     const keys = await this.redis.zrange(this.keyPrefix, 0, -1)
     if (keys.length === 0) {
       return []
     }
+    const buffers = await this.redis.hmgetBuffer(this.hashPrefix, ...keys)
 
-    const hashDataList = await this.redis.hmget(this.hashPrefix, ...keys)
-
-    return hashDataList.map((hashData) => JSON.parse(hashData as string)) as IItem[]
+    return buffers.map((b) => bufferToItem(b) as IItem<T>)
   }
 
-  async getPaginated(page: number, pageSize: number): Promise<IPaginatedItems> {
+  async getItemScoreById(id: string): Promise<number | null> {
+    const score = await this.redis.zscore(this.keyPrefix, id)
+
+    return score ? Number(score) : null
+  }
+
+  async getItemsByScore(min: number, max: number): Promise<IItem<T>[]> {
+    const keys = await this.redis.zrangebyscore(this.keyPrefix, min, max)
+    if (keys.length === 0) {
+      return []
+    }
+
+    const buffers = await this.redis.hmgetBuffer(this.hashPrefix, ...keys)
+    const items = buffers.map((b) => bufferToItem(b) as IItem<T>)
+
+    return items
+  }
+
+  async getPaginated(page: number, pageSize: number): Promise<IPaginatedItems<T>> {
     const count = await this.redis.zcard(this.keyPrefix)
     const start = (page - 1) * pageSize
     const end = start + pageSize - 1
@@ -60,11 +74,11 @@ export class SortedItemRepository implements ISortedItemRepository {
       }
     }
 
-    const hashDataList = await this.redis.hmget(this.hashPrefix, ...keys)
-    const parsedItems = hashDataList.map((hashData) => JSON.parse(hashData as string)) as IItem[]
+    const buffers = await this.redis.hmgetBuffer(this.hashPrefix, ...keys)
+    const items = buffers.map((b) => bufferToItem(b) as IItem<T>)
 
     return {
-      items: parsedItems,
+      items,
       count
     }
   }

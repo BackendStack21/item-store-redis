@@ -15,7 +15,7 @@ This module provides classes that implement repositories for storing and retriev
 - `SortedItemRepository`: The class provides a more advanced functionality for storing and retrieving items in a sorted manner. The items are sorted based on a numeric score, and can be queried in a paginated manner as well. The items are stored in Redis using a sorted set data model, making it more performant and efficient at scale (see `demos/benchmark.ts`). However, this model does not supports automatic expiration.
 
 ```ts
-import { ItemRepository, SortedItemRepository, SortedItem, IItem } from 'item-store-redis'
+import { ItemRepository, SortedItemRepository, IItem } from 'item-store-redis'
 ```
 
 ## Class ItemRepository
@@ -31,22 +31,23 @@ import { ItemRepository } from 'item-store-redis'
 import Redis from 'ioredis'
 
 const redis = new Redis({ host: 'localhost', port: 6379 })
-const repository = new ItemRepository('my-unsorted-repo', redis)
+const repository = new ItemRepository<T>('my-unsorted-repo', redis)
 ...
 ```
 
 ### Interface
 ```ts
-interface IItemRepository {
+interface IItemRepository<T> {
   name: string
   redis: Redis | Cluster
-  set(item: IItem, expirationInSeconds?: number): Promise<void>
-  getById(id: string): Promise<IItem | null>
-  getAll(): Promise<IItem[]>
-  getPaginated(page: number, pageSize: number): Promise<IPaginatedItems>
-  hasItem(id: string): Promise<boolean>
-  deleteById(id: string): Promise<void>
-  deleteAll(): Promise<void>
+  set: (item: IItem<T>, expirationInSeconds?: number) => Promise<void>
+  getById: (id: string) => Promise<IItem<T> | null>
+  getAll: () => Promise<IItem<T>[]>
+  getPaginated: (page: number, pageSize: number) => Promise<IPaginatedItems<T>>
+  hasItem: (id: string) => Promise<boolean>
+  deleteById: (id: string) => Promise<void>
+  deleteAll: () => Promise<void>
+  count: () => Promise<number>
 }
 ```
 
@@ -63,25 +64,26 @@ import { SortedItemRepository, SortedItem } from 'item-store-redis'
 import Redis from 'ioredis'
 
 const redis = new Redis({ host: 'localhost', port: 6379 })
-const repository = new SortedItemRepository('my-sorted-repo', redis)
+const repository = new SortedItemRepository<T>('my-sorted-repo', redis)
 ...
 ```
 
 ### Interface
 ```ts
-interface ISortedItemRepository {
+interface ISortedItemRepository<T> {
   name: string
   redis: Redis | Cluster
-  add(item: SortedItem): Promise<void>
-  updateById(id: string, data: unknown): Promise<boolean>
-  getById(id: string): Promise<IItem | null>
-  getAll(): Promise<IItem[]>
-  getPaginated(page: number, pageSize: number): Promise<IPaginatedItems>
-  deletePage(page: number, pageSize: number): Promise<void>
-  hasItem(id: string): Promise<boolean>
-  deleteById(id: string): Promise<void>
-  deleteAll(): Promise<void>
-  count(): Promise<number>
+  set: (item: IItem<T>) => Promise<void>
+  getById: (id: string) => Promise<IItem<T> | null>
+  getAll: () => Promise<IItem<T>[]>
+  getPaginated: (page: number, pageSize: number) => Promise<IPaginatedItems<T>>
+  getItemScoreById: (id: string) => Promise<number | null>
+  getItemsByScore: (min: number, max: number) => Promise<IItem<T>[]>
+  deletePage: (page: number, pageSize: number) => Promise<void>
+  hasItem: (id: string) => Promise<boolean>
+  deleteById: (id: string) => Promise<void>
+  deleteAll: () => Promise<void>
+  count: () => Promise<number>
 }
 ```
 

@@ -3,7 +3,7 @@ import { describe, expect, test, beforeAll, beforeEach, afterAll, afterEach } fr
 import Redis from 'ioredis'
 
 describe('ItemRepository', () => {
-  let repository: ItemRepository
+  let repository: ItemRepository<string>
   const redis: Redis = new Redis({
     host: '127.0.0.1',
     port: 6379
@@ -27,7 +27,7 @@ describe('ItemRepository', () => {
   })
 
   test('should add and get an item', async () => {
-    const item: IItem = { id: 'test', data: 'test' }
+    const item: IItem<string> = { id: 'test', data: 'test' }
     await repository.set(item)
 
     const result = await repository.getById('test')
@@ -35,7 +35,7 @@ describe('ItemRepository', () => {
   })
 
   test('should set an expiration if specified', async () => {
-    const item: IItem = { data: 'bar', id: 'expiring-item' }
+    const item: IItem<string> = { data: 'bar', id: 'expiring-item' }
     const expirationInSeconds = 1
 
     await repository.set(item, expirationInSeconds)
@@ -46,7 +46,7 @@ describe('ItemRepository', () => {
   })
 
   test('should get all items', async () => {
-    const items: IItem[] = [
+    const items: IItem<string>[] = [
       { id: 'test1', data: 'test1' },
       { id: 'test2', data: 'test2' },
       { id: 'test3', data: 'test3' }
@@ -63,7 +63,7 @@ describe('ItemRepository', () => {
   })
 
   test('should get paginated items', async () => {
-    const items: IItem[] = [
+    const items: IItem<string>[] = [
       { id: 'test1', data: 'test1' },
       { id: 'test2', data: 'test2' },
       { id: 'test3', data: 'test3' },
@@ -76,6 +76,9 @@ describe('ItemRepository', () => {
     for (const item of items) {
       await repository.set(item)
     }
+
+    const count = await repository.count()
+    expect(count).toBe(7)
 
     const result1 = await repository.getPaginated(1, 3)
     expect(result1.items.length).toBe(3)
@@ -91,7 +94,7 @@ describe('ItemRepository', () => {
   })
 
   test('should check if item exists', async () => {
-    const item: IItem = { id: 'test', data: 'test' }
+    const item: IItem<string> = { id: 'test', data: 'test' }
     await repository.set(item)
 
     const result1 = await repository.hasItem('test')
@@ -102,7 +105,7 @@ describe('ItemRepository', () => {
   })
 
   test('should delete an item', async () => {
-    const item: IItem = { id: 'test', data: 'test' }
+    const item: IItem<string> = { id: 'test', data: 'test' }
     await repository.set(item)
 
     await repository.deleteById('test')
@@ -112,7 +115,7 @@ describe('ItemRepository', () => {
   })
 
   test('should delete all items', async () => {
-    const item: IItem = { id: 'test', data: 'test' }
+    const item: IItem<string> = { id: 'test', data: 'test' }
     await repository.set(item)
 
     await repository.deleteAll()
