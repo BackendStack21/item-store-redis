@@ -61,7 +61,7 @@ describe('SortedItemRepository', () => {
     const scores: number[] = []
     for (const item of items) {
       await repository.set(item)
-      scores.push(await repository.getItemScoreById(item.id) as number)
+      scores.push((await repository.getItemScoreById(item.id)) as number)
     }
 
     expect(scores[0] < scores[1] && scores[1] < scores[2]).toBeTruthy()
@@ -77,7 +77,7 @@ describe('SortedItemRepository', () => {
     const scores: number[] = []
     for (const item of items) {
       await repository.set(item)
-      scores.push(await repository.getItemScoreById(item.id) as number)
+      scores.push((await repository.getItemScoreById(item.id)) as number)
     }
 
     expect(await repository.getItemsByScore(scores[0], scores[0] + 50_000)).toEqual(items)
