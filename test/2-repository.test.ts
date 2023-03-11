@@ -77,6 +77,9 @@ describe('ItemRepository', () => {
       await repository.set(item)
     }
 
+    const count = await repository.count()
+    expect(count).toBe(7)
+
     const result1 = await repository.getPaginated(1, 3)
     expect(result1.items.length).toBe(3)
     expect(result1.count).toBe(7)

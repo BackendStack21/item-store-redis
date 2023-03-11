@@ -20,6 +20,7 @@ export interface IItemRepository<T> {
   hasItem: (id: string) => Promise<boolean>
   deleteById: (id: string) => Promise<void>
   deleteAll: () => Promise<void>
+  count: () => Promise<number>
 }
 
 export interface ISortedItemRepository<T> {

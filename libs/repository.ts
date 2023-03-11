@@ -82,6 +82,12 @@ export class ItemRepository<T> implements IItemRepository<T> {
     }
   }
 
+  async count(): Promise<number> {
+    const keys = await this.redis.keys(this.getKey('*'))
+
+    return keys.length
+  }
+
   private getKey(id: string): string {
     return `${this.keyPrefix}${id}`
   }

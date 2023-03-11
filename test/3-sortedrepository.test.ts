@@ -51,6 +51,40 @@ describe('SortedItemRepository', () => {
     }
   })
 
+  test('should get items score by id', async () => {
+    const items: IItem<string>[] = [
+      { id: 'test1', data: 'test1' },
+      { id: 'test2', data: 'test2' },
+      { id: 'test3', data: 'test3' }
+    ]
+
+    const scores: number[] = []
+    for (const item of items) {
+      await repository.set(item)
+      scores.push(await repository.getItemScoreById(item.id) as number)
+    }
+
+    expect(scores[0] < scores[1] && scores[1] < scores[2]).toBeTruthy()
+  })
+
+  test('should get items by score', async () => {
+    const items: IItem<string>[] = [
+      { id: 'test1', data: 'test1' },
+      { id: 'test2', data: 'test2' },
+      { id: 'test3', data: 'test3' }
+    ]
+
+    const scores: number[] = []
+    for (const item of items) {
+      await repository.set(item)
+      scores.push(await repository.getItemScoreById(item.id) as number)
+    }
+
+    expect(await repository.getItemsByScore(scores[0], scores[0] + 50_000)).toEqual(items)
+    expect(await repository.getItemsByScore(scores[1], scores[0] + 50_000)).toEqual(items.slice(1))
+    expect(await repository.getItemsByScore(scores[2], scores[0] + 50_000)).toEqual(items.slice(2))
+  })
+
   test('should get paginated items', async () => {
     const items: IItem<string>[] = [
       { id: 'test1', data: 'test1' },
