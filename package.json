@@ -5,7 +5,7 @@
   "main": "dist/libs/index.js",
   "types": "dist/libs/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "rm -r dist/ && tsc",
     "lint": "bun x rome ci .",
     "format": "bun x rome format . --write",
     "test": "bun test test/*.test.ts"
