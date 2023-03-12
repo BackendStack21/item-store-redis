@@ -1,6 +1,6 @@
 import Redis, { Cluster } from 'ioredis'
 import { IItem, IItemRepository, IPaginatedItems } from './model'
-import { encode, decode } from 'msgpack-lite'
+import { encode, decode } from '@msgpack/msgpack'
 
 export function bufferToItem<T>(buffer: Buffer | null): IItem<T> | null {
   if (!buffer) return null
@@ -20,9 +20,9 @@ export class ItemRepository<T> implements IItemRepository<T> {
     const key = this.getKey(item.id)
     const buffer = encode(item)
     if (expirationInSeconds != null) {
-      await this.redis.setex(key, expirationInSeconds, buffer)
+      await this.redis.setex(key, expirationInSeconds, Buffer.from(buffer))
     } else {
-      await this.redis.set(key, buffer)
+      await this.redis.set(key, Buffer.from(buffer))
     }
   }
 
