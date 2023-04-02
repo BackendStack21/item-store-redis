@@ -153,4 +153,83 @@ describe('SortedItemRepository', () => {
     const result = await repository.getAll()
     expect(result).toEqual([])
   })
+
+  test('should get first N items', async () => {
+    const items: IItem<string>[] = [
+      { id: 'test1', data: 'test1' },
+      { id: 'test2', data: 'test2' },
+      { id: 'test3', data: 'test3' }
+    ]
+
+    for (const item of items) {
+      await repository.set(item)
+    }
+
+    const result = await repository.getFirstNItems(2)
+    expect(result).toEqual(items.slice(0, 2))
+  })
+
+  test('should get last N items', async () => {
+    const items: IItem<string>[] = [
+      { id: 'test1', data: 'test1' },
+      { id: 'test2', data: 'test2' },
+      { id: 'test3', data: 'test3' }
+    ]
+
+    for (const item of items) {
+      await repository.set(item)
+    }
+
+    const result = await repository.getLastNItems(2)
+    expect(result).toEqual(items.slice(1))
+  })
+
+  test('should get items in range', async () => {
+    const items: IItem<string>[] = [
+      { id: 'test1', data: 'test1' },
+      { id: 'test2', data: 'test2' },
+      { id: 'test3', data: 'test3' }
+    ]
+
+    for (const item of items) {
+      await repository.set(item)
+    }
+
+    const result = await repository.getItemsInRange(1, 2)
+    expect(result).toEqual(items.slice(1, 3))
+  })
+
+  test('should check if items exist in range', async () => {
+    const items: IItem<string>[] = [
+      { id: 'test1', data: 'test1' },
+      { id: 'test2', data: 'test2' },
+      { id: 'test3', data: 'test3' }
+    ]
+
+    for (const item of items) {
+      await repository.set(item)
+    }
+
+    const minScore = await repository.getItemScoreById(items[0].id)
+    const maxScore = await repository.getItemScoreById(items[2].id)
+
+    expect(await repository.existsInRange(minScore as number, maxScore as number)).toBeTruthy()
+    expect(await repository.existsInRange((maxScore as number) + 1, (maxScore as number) + 100)).toBeFalsy()
+  })
+
+  test('should get next N items greater than score', async () => {
+    const items: IItem<string>[] = [
+      { id: 'test1', data: 'test1' },
+      { id: 'test2', data: 'test2' },
+      { id: 'test3', data: 'test3' }
+    ]
+
+    for (const item of items) {
+      await repository.set(item)
+    }
+
+    const score = await repository.getItemScoreById(items[0].id)
+    const result = await repository.getNextNItemsGreaterThanScore(score as number, 2)
+    expect(result).toEqual(items.slice(1))
+  })
 })
