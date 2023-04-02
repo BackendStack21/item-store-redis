@@ -147,7 +147,7 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
   }
 
   async getNextNItemsGreaterThanScore(score: number, n: number): Promise<IItem<T>[]> {
-    const keys = await this.redis.zrangebyscore(this.keyPrefix, '(' + score, '+inf', 'LIMIT', 0, n)
+    const keys = await this.redis.zrangebyscore(this.keyPrefix, `(${score}`, '+inf', 'LIMIT', 0, n)
     if (keys.length === 0) {
       return []
     }
