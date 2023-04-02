@@ -1,10 +1,7 @@
 import { IItem, IPaginatedItems, ISortedItemRepository } from './model'
-import { monotonicFactory, decodeTime } from 'ulidx'
 import { Redis, Cluster } from 'ioredis'
 import { encode } from '@msgpack/msgpack'
 import { bufferToItem } from './repository'
-
-const ulid = monotonicFactory()
 
 export class SortedItemRepository<T> implements ISortedItemRepository<T> {
   private readonly keyPrefix: string
@@ -19,7 +16,7 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
     if (await this.hasItem(item.id)) {
       await this.redis.zrem(this.keyPrefix, item.id)
     }
-    const score = decodeTime(ulid())
+    const score = Number(process.hrtime.bigint())
     const buffer = encode(item)
 
     await Promise.all([
