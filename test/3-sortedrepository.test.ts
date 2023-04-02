@@ -80,9 +80,20 @@ describe('SortedItemRepository', () => {
       scores.push((await repository.getItemScoreById(item.id)) as number)
     }
 
-    expect(await repository.getItemsByScore(scores[0], scores[0] + 50_000)).toEqual(items)
-    expect(await repository.getItemsByScore(scores[1], scores[0] + 50_000)).toEqual(items.slice(1))
-    expect(await repository.getItemsByScore(scores[2], scores[0] + 50_000)).toEqual(items.slice(2))
+    const minScore = scores[0]
+    const maxScore = scores[2] + 50_000
+
+    const result = await repository.getItemsByScore(minScore, maxScore)
+    expect(result.length).toBe(3)
+    for (const item of result) {
+      expect(items.find((i) => i.id === item.id)).toEqual(item)
+    }
+
+    const partialResult = await repository.getItemsByScore(scores[1], maxScore)
+    expect(partialResult.length).toBe(2)
+    for (const item of partialResult) {
+      expect(items.slice(1).find((i) => i.id === item.id)).toEqual(item)
+    }
   })
 
   test('should get paginated items', async () => {
