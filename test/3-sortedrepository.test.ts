@@ -239,8 +239,8 @@ describe('SortedItemRepository', () => {
       await repository.set(item)
     }
 
-    const score = await repository.getItemScoreById(items[0].id)
-    const result = await repository.getNextNItemsGreaterThanScore(score as number, 2)
-    expect(result).toEqual(items.slice(1))
+    const score = await repository.getItemScoreById(items[1].id)
+    const result = await repository.getNextNItemsGreaterThanScore(score as number, 1)
+    expect(result).toEqual(items.slice(2))
   })
 })
