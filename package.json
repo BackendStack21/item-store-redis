@@ -35,8 +35,7 @@
   "homepage": "https://github.com/BackendStack21/item-store-redis#readme",
   "dependencies": {
     "@msgpack/msgpack": "^2.8.0",
-    "ioredis": "^5.3.1",
-    "ulidx": "^0.5.0"
+    "ioredis": "^5.3.1"
   },
   "devDependencies": {
     "msgpack-lite": "^0.1.26",

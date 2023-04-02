@@ -1,10 +1,7 @@
 import { IItem, IPaginatedItems, ISortedItemRepository } from './model'
-import { monotonicFactory, decodeTime } from 'ulidx'
 import { Redis, Cluster } from 'ioredis'
 import { encode } from '@msgpack/msgpack'
 import { bufferToItem } from './repository'
-
-const ulid = monotonicFactory()
 
 export class SortedItemRepository<T> implements ISortedItemRepository<T> {
   private readonly keyPrefix: string
@@ -19,7 +16,7 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
     if (await this.hasItem(item.id)) {
       await this.redis.zrem(this.keyPrefix, item.id)
     }
-    const score = decodeTime(ulid())
+    const score = Number(process.hrtime.bigint())
     const buffer = encode(item)
 
     await Promise.all([
@@ -108,6 +105,52 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
 
   async deleteAll(): Promise<void> {
     await Promise.all([await this.redis.del(this.hashPrefix), await this.redis.del(this.keyPrefix)])
+  }
+
+  async getFirstNItems(n: number): Promise<IItem<T>[]> {
+    const keys = await this.redis.zrange(this.keyPrefix, 0, n - 1)
+    if (keys.length === 0) {
+      return []
+    }
+    const buffers = await this.redis.hmgetBuffer(this.hashPrefix, ...keys)
+
+    return buffers.map((b) => bufferToItem(b) as IItem<T>)
+  }
+
+  async getLastNItems(n: number): Promise<IItem<T>[]> {
+    const keys = await this.redis.zrevrange(this.keyPrefix, 0, n - 1)
+    if (keys.length === 0) {
+      return []
+    }
+    const buffers = await this.redis.hmgetBuffer(this.hashPrefix, ...keys)
+
+    return buffers.map((b) => bufferToItem(b) as IItem<T>).reverse()
+  }
+
+  async getItemsInRange(start: number, end: number): Promise<IItem<T>[]> {
+    const keys = await this.redis.zrange(this.keyPrefix, start, end)
+    if (keys.length === 0) {
+      return []
+    }
+    const buffers = await this.redis.hmgetBuffer(this.hashPrefix, ...keys)
+
+    return buffers.map((b) => bufferToItem(b) as IItem<T>)
+  }
+
+  async existsInRange(min: number, max: number): Promise<boolean> {
+    const count = await this.redis.zcount(this.keyPrefix, min, max)
+
+    return count > 0
+  }
+
+  async getNextNItemsGreaterThanScore(score: number, n: number): Promise<IItem<T>[]> {
+    const keys = await this.redis.zrangebyscore(this.keyPrefix, `(${score}`, '+inf', 'LIMIT', 0, n)
+    if (keys.length === 0) {
+      return []
+    }
+    const buffers = await this.redis.hmgetBuffer(this.hashPrefix, ...keys)
+
+    return buffers.map((b) => bufferToItem(b) as IItem<T>)
   }
 }
 
