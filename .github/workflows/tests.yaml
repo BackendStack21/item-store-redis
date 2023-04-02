@@ -1,14 +1,7 @@
 name: tests
-on:
-  push:
-    branches:
-      - main
-    pull_request:
-      branches-ignore:
-        - main
+on: [push, pull_request]
 
 jobs:
-  
   testing:
     services:
       redis:
