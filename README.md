@@ -27,7 +27,7 @@ constructor (name: string, redis?: Redis | Cluster)
 
 ### Usage
 ```ts
-import { ItemRepository } from 'item-store-redis'
+import { ItemRepository, IItem } from 'item-store-redis'
 import Redis from 'ioredis'
 
 const redis = new Redis({ host: 'localhost', port: 6379 })
@@ -60,7 +60,7 @@ constructor (name: string, redis?: Redis | Cluster)
 
 ### Usage
 ```ts
-import { SortedItemRepository, SortedItem } from 'item-store-redis'
+import { SortedItemRepository, IItem } from 'item-store-redis'
 import Redis from 'ioredis'
 
 const redis = new Redis({ host: 'localhost', port: 6379 })
