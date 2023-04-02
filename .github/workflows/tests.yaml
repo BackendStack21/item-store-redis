@@ -1,9 +1,9 @@
 name: tests
 push:
   branches:
-      - main
+    - main
   pull_request:
-    branches:
+    branches-ignore:
       - main
 
 jobs:
