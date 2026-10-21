@@ -12,7 +12,7 @@
 This module provides classes that implement repositories for storing and retrieving data in a Redis database:
 
 - `ItemRepository`: The class provides basic functionality for storing and retrieving individual items, as well as querying all items or a subset of items in a paginated manner. The items are stored in Redis using a key-value data model with expiration support. 
-- `SortedItemRepository`: The class provides a more advanced functionality for storing and retrieving items in a sorted manner. The items are sorted based on a numeric score, and can be queried in a paginated manner as well. The items are stored in Redis using a sorted set data model, making it more performant and efficient at scale (see `demos/benchmark.ts`). However, this model does not supports automatic expiration.
+- `SortedItemRepository`: The class provides a more advanced functionality for storing and retrieving items in a sorted manner. The items are sorted based on a numeric score, and can be queried in a paginated manner as well. The items are stored in Redis using a sorted set data model, making it more performant and efficient at scale (see `demos/benchmark.ts`). Per-item expiration is not supported, but size and age based retention is available through `maxItems`, `trimToSize` and `deleteByScore`.
 
 ```ts
 import { ItemRepository, SortedItemRepository, IItem } from 'item-store-redis'
@@ -22,7 +22,11 @@ import { ItemRepository, SortedItemRepository, IItem } from 'item-store-redis'
 
 ### Constructor
 ```ts
-constructor (name: string, redis?: Redis | Cluster)
+constructor (name: string, redis?: Redis | Cluster, options?: IRepositoryOptions<T>)
+
+interface IRepositoryOptions<T> {
+  serializer?: ISerializer<T> // defaults to MessagePack
+}
 ```
 
 ### Usage
@@ -32,7 +36,14 @@ import Redis from 'ioredis'
 
 const redis = new Redis({ host: 'localhost', port: 6379 })
 const repository = new ItemRepository<T>('my-unsorted-repo', redis)
-...
+
+await repository.set({ id: 'a', data }, 60) // expires in 60 seconds
+await repository.setMany([{ id: 'b', data }, { id: 'c', data }])
+const [a, missing] = await repository.getByIds(['a', 'missing']) // missing === null
+
+for await (const item of repository.iterate({ batchSize: 500 })) {
+  // streams the whole repository without loading it in memory
+}
 ```
 
 ### Interface
@@ -41,21 +52,36 @@ interface IItemRepository<T> {
   name: string
   redis: Redis | Cluster
   set: (item: IItem<T>, expirationInSeconds?: number) => Promise<void>
+  setMany: (items: IItem<T>[], expirationInSeconds?: number) => Promise<void>
   getById: (id: string) => Promise<IItem<T> | null>
+  getByIds: (ids: string[]) => Promise<(IItem<T> | null)[]>
   getAll: () => Promise<IItem<T>[]>
   getPaginated: (page: number, pageSize: number) => Promise<IPaginatedItems<T>>
+  iterate: (options?: { batchSize?: number }) => AsyncIterableIterator<IItem<T>>
   hasItem: (id: string) => Promise<boolean>
   deleteById: (id: string) => Promise<void>
+  deleteByIds: (ids: string[]) => Promise<number>
   deleteAll: () => Promise<void>
   count: () => Promise<number>
+  getTtl: (id: string) => Promise<number | null> // -1: no expiration, null: not found
+  expire: (id: string, expirationInSeconds: number) => Promise<boolean>
+  persist: (id: string) => Promise<boolean>
 }
 ```
+
+Keys are discovered with `SCAN` (never `KEYS`), on every master node when using Redis Cluster. Pages are ordered by item key, so they are stable across calls.
 
 ## Class SortedItemRepository
 
 ### Constructor
 ```ts
-constructor (name: string, redis?: Redis | Cluster)
+constructor (name: string, redis?: Redis | Cluster, options?: ISortedRepositoryOptions<T>)
+
+interface ISortedRepositoryOptions<T> {
+  serializer?: ISerializer<T> // defaults to MessagePack
+  maxItems?: number // caps the repository size, the lowest scored (oldest) items are removed
+  hashTag?: boolean // see "Redis Cluster" below
+}
 ```
 
 ### Usage
@@ -65,135 +91,72 @@ import Redis from 'ioredis'
 
 const redis = new Redis({ host: 'localhost', port: 6379 })
 const repository = new SortedItemRepository<T>('my-sorted-repo', redis)
-...
+
+await repository.set({ id: 'a', data }) // scored by insertion time (microseconds since epoch)
+await repository.set({ id: 'b', data }, { score: 42 }) // explicit score
+await repository.set({ id: 'a', data: newData }, { keepScore: true }) // update without moving the item
+
+const latest = await repository.getPaginated(1, 10, 'desc')
+const lastHour = await repository.getItemsByScore((Date.now() - 3_600_000) * 1000, '+inf', { limit: 100 })
+await repository.deleteByScore('-inf', (Date.now() - 86_400_000) * 1000) // retention: drop items older than a day
 ```
 
 ### Interface
 ```ts
-/**
- * ISortedItemRepository is an interface that defines the methods for interacting with a
- * sorted item repository that uses Redis as the storage system.
- */
-export interface ISortedItemRepository<T> {
+interface ISortedItemRepository<T> {
   name: string
   redis: Redis | Cluster
-
-  /**
-   * Sets an item in the repository.
-   * @param item - The item to be added.
-   */
-  set: (item: IItem<T>) => Promise<void>
-
-  /**
-   * Retrieves an item from the repository by its ID.
-   * @param id - The ID of the item to retrieve.
-   * @returns The item if found, null otherwise.
-   */
+  set: (item: IItem<T>, options?: { score?: number; keepScore?: boolean }) => Promise<void>
+  setMany: (items: IItem<T>[], options?: { score?: number; keepScore?: boolean }) => Promise<void>
   getById: (id: string) => Promise<IItem<T> | null>
-
-  /**
-   * Retrieves all items from the repository.
-   * @returns An array of all items in the repository.
-   */
+  getByIds: (ids: string[]) => Promise<(IItem<T> | null)[]>
   getAll: () => Promise<IItem<T>[]>
-
-  /**
-   * Retrieves a paginated set of items from the repository.
-   * @param page - The page number to retrieve.
-   * @param pageSize - The number of items per page.
-   * @returns An object containing the paginated items and the total count of items.
-   */
-  getPaginated: (page: number, pageSize: number) => Promise<IPaginatedItems<T>>
-
-  /**
-   * Retrieves the score of an item by its ID.
-   * @param id - The ID of the item.
-   * @returns The score of the item if found, null otherwise.
-   */
+  getPaginated: (page: number, pageSize: number, order?: 'asc' | 'desc') => Promise<IPaginatedItems<T>>
+  iterate: (options?: { batchSize?: number; order?: 'asc' | 'desc' }) => AsyncIterableIterator<IItem<T>>
   getItemScoreById: (id: string) => Promise<number | null>
-
-  /**
-   * Retrieves items by their scores within a specified range.
-   * @param min - The minimum score value.
-   * @param max - The maximum score value.
-   * @returns An array of items with scores within the specified range.
-   */
-  getItemsByScore: (min: number, max: number) => Promise<IItem<T>[]>
-
-  /**
-   * Deletes a page of items from the repository.
-   * @param page - The page number of items to delete.
-   * @param pageSize - The number of items per page.
-   */
-  deletePage: (page: number, pageSize: number) => Promise<void>
-
-  /**
-   * Checks if an item exists in the repository by its ID.
-   * @param id - The ID of the item.
-   * @returns A boolean indicating whether the item exists.
-   */
-  hasItem: (id: string) => Promise<boolean>
-
-  /**
-   * Deletes an item from the repository by its ID.
-   * @param id - The ID of the item to delete.
-   */
-  deleteById: (id: string) => Promise<void>
-
-  /**
-   * Deletes all items from the repository.
-   */
-  deleteAll: () => Promise<void>
-
-  /**
-   * Retrieves the count of items in the repository.
-   * @returns The count of items.
-   */
-  count: () => Promise<number>
-
-  /**
-   * Retrieves the first N items from the repository.
-   * @param n - The number of items to retrieve.
-   * @returns An array of the first N items.
-   */
+  getItemsByScore: (min: ScoreBound, max: ScoreBound, options?: IScoreRangeOptions) => Promise<IItem<T>[]>
   getFirstNItems: (n: number) => Promise<IItem<T>[]>
-
-  /**
-   * Retrieves the last N items from the repository.
-   * @param n - The number of items to retrieve.
-   * @returns An array of the last N items.
-   */
   getLastNItems: (n: number) => Promise<IItem<T>[]>
-
-  /**
-   * Retrieves items within a specified index range.
-   * @param start - The starting index.
-   * @param end - The ending index.
-   *
-   * @returns An array of items within the specified index range.
-   */
   getItemsInRange: (start: number, end: number) => Promise<IItem<T>[]>
-
-  /**
-   *
-   * Checks if any items exist within a specified score range.
-   * @param min - The minimum score value.
-   * @param max - The maximum score value.
-   * @returns A boolean indicating whether any items exist within the specified score range.
-   */
-  existsInRange: (min: number, max: number) => Promise<boolean>
-
-  /**
-   *
-   * Retrieves the next N items with scores greater than a specified score.
-   * @param score - The score to compare.
-   * @param n - The number of items to retrieve.
-   * @returns An array of the next N items with scores greater than the specified score.
-   */
   getNextNItemsGreaterThanScore: (score: number, n: number) => Promise<IItem<T>[]>
+  existsInRange: (min: ScoreBound, max: ScoreBound) => Promise<boolean>
+  hasItem: (id: string) => Promise<boolean>
+  count: () => Promise<number>
+  deleteById: (id: string) => Promise<void>
+  deleteByIds: (ids: string[]) => Promise<number>
+  deletePage: (page: number, pageSize: number) => Promise<void>
+  deleteByScore: (min: ScoreBound, max: ScoreBound) => Promise<number>
+  trimToSize: (maxItems: number) => Promise<number>
+  deleteAll: () => Promise<void>
 }
 
+type ScoreBound = number | '-inf' | '+inf'
+
+interface IScoreRangeOptions {
+  offset?: number
+  limit?: number
+  order?: 'asc' | 'desc'
+}
 ```
+
+See `libs/model.ts` for the documented interfaces.
+
+## Validation
+Pages start at `1`; `page`, `pageSize`, expirations and `n` arguments must be integers in range, otherwise a `RangeError` is thrown (previously, values like `pageSize = 0` or `n = 0` silently selected the whole repository). Item ids must be non-empty strings.
+
+## Redis Cluster
+Both repositories support `Cluster` connections. `SortedItemRepository` stores its index and data under two keys. On standalone Redis, writes and deletes touching both keys run as a `MULTI` transaction. On Redis Cluster those keys live in different slots, so the commands run in a safe order instead (data before index on writes, index before data on deletes) and readers never observe indexed items without data. Set `hashTag: true` to keep both keys in the same slot and get atomic transactions on Cluster as well. Note that this changes the key layout (`items:{name}:`), so existing data stored without the option is not visible with it.
+
+## Custom serialization
+```ts
+const repository = new ItemRepository<T>('json-repo', redis, {
+  serializer: {
+    encode: (item) => Buffer.from(JSON.stringify(item)),
+    decode: (buffer) => JSON.parse(buffer.toString())
+  }
+})
+```
+
 
 # License
 

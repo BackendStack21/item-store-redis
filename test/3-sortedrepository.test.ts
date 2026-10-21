@@ -14,7 +14,7 @@ describe('SortedItemRepository', () => {
   })
 
   beforeEach(() => {
-    const name = `repo-${Date.now()}`
+    const name = `repo-${crypto.randomUUID()}`
     repository = new SortedItemRepository<string>(name, redis)
   })
 
@@ -46,6 +46,7 @@ describe('SortedItemRepository', () => {
     }
 
     const result = await repository.getAll()
+    expect(result.length).toBe(items.length)
     for (const item of result) {
       expect(items.find((i) => i.id === item.id)).toEqual(item)
     }
