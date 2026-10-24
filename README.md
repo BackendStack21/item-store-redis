@@ -1,17 +1,18 @@
 # Introduction
+
 [![NPM version](https://badgen.net/npm/v/item-store-redis)](https://www.npmjs.com/package/item-store-redis)
 [![NPM Total Downloads](https://badgen.net/npm/dt/item-store-redis)](https://www.npmjs.com/package/item-store-redis)
 [![License](https://badgen.net/npm/license/item-store-redis)](https://www.npmjs.com/package/item-store-redis)
 [![TypeScript support](https://badgen.net/npm/types/item-store-redis)](https://www.npmjs.com/package/item-store-redis)
 [![Github stars](https://badgen.net/github/stars/BackendStack21/item-store-redis?icon=github)](https://github.com/BackendStack21/item-store-redis.git)
 
-<img src="illustration.svg" width="400">  
+<img src="illustration.svg" width="400">
 
 > Explanatory article: https://medium.com/@kyberneees/introducing-item-store-redis-a-high-performance-redis-based-item-store-for-efficient-data-4510d4e9fcf9
 
 This module provides classes that implement repositories for storing and retrieving data in a Redis database:
 
-- `ItemRepository`: The class provides basic functionality for storing and retrieving individual items, as well as querying all items or a subset of items in a paginated manner. The items are stored in Redis using a key-value data model with expiration support. 
+- `ItemRepository`: The class provides basic functionality for storing and retrieving individual items, as well as querying all items or a subset of items in a paginated manner. The items are stored in Redis using a key-value data model with expiration support.
 - `SortedItemRepository`: The class provides a more advanced functionality for storing and retrieving items in a sorted manner. The items are sorted based on a numeric score, and can be queried in a paginated manner as well. The items are stored in Redis using a sorted set data model, making it more performant and efficient at scale (see `demos/benchmark.ts`). Per-item expiration is not supported, but size and age based retention is available through `maxItems`, `trimToSize` and `deleteByScore`.
 
 ```ts
@@ -21,6 +22,7 @@ import { ItemRepository, SortedItemRepository, IItem } from 'item-store-redis'
 ## Class ItemRepository
 
 ### Constructor
+
 ```ts
 constructor (name: string, redis?: Redis | Cluster, options?: IRepositoryOptions<T>)
 
@@ -30,6 +32,7 @@ interface IRepositoryOptions<T> {
 ```
 
 ### Usage
+
 ```ts
 import { ItemRepository, IItem } from 'item-store-redis'
 import Redis from 'ioredis'
@@ -38,7 +41,10 @@ const redis = new Redis({ host: 'localhost', port: 6379 })
 const repository = new ItemRepository<T>('my-unsorted-repo', redis)
 
 await repository.set({ id: 'a', data }, 60) // expires in 60 seconds
-await repository.setMany([{ id: 'b', data }, { id: 'c', data }])
+await repository.setMany([
+  { id: 'b', data },
+  { id: 'c', data }
+])
 const [a, missing] = await repository.getByIds(['a', 'missing']) // missing === null
 
 for await (const item of repository.iterate({ batchSize: 500 })) {
@@ -47,6 +53,7 @@ for await (const item of repository.iterate({ batchSize: 500 })) {
 ```
 
 ### Interface
+
 ```ts
 interface IItemRepository<T> {
   name: string
@@ -74,6 +81,7 @@ Keys are discovered with `SCAN` (never `KEYS`), on every master node when using 
 ## Class SortedItemRepository
 
 ### Constructor
+
 ```ts
 constructor (name: string, redis?: Redis | Cluster, options?: ISortedRepositoryOptions<T>)
 
@@ -85,6 +93,7 @@ interface ISortedRepositoryOptions<T> {
 ```
 
 ### Usage
+
 ```ts
 import { SortedItemRepository, IItem } from 'item-store-redis'
 import Redis from 'ioredis'
@@ -102,6 +111,7 @@ await repository.deleteByScore('-inf', (Date.now() - 86_400_000) * 1000) // rete
 ```
 
 ### Interface
+
 ```ts
 interface ISortedItemRepository<T> {
   name: string
@@ -142,12 +152,15 @@ interface IScoreRangeOptions {
 See `libs/model.ts` for the documented interfaces.
 
 ## Validation
+
 Pages start at `1`; `page`, `pageSize`, expirations and `n` arguments must be integers in range, otherwise a `RangeError` is thrown (previously, values like `pageSize = 0` or `n = 0` silently selected the whole repository). Item ids must be non-empty strings.
 
 ## Redis Cluster
+
 Both repositories support `Cluster` connections. `SortedItemRepository` stores its index and data under two keys. On standalone Redis, writes and deletes touching both keys run as a `MULTI` transaction. On Redis Cluster those keys live in different slots, so the commands run in a safe order instead (data before index on writes, index before data on deletes) and readers never observe indexed items without data. Set `hashTag: true` to keep both keys in the same slot and get atomic transactions on Cluster as well. Note that this changes the key layout (`items:{name}:`), so existing data stored without the option is not visible with it.
 
 ## Custom serialization
+
 ```ts
 const repository = new ItemRepository<T>('json-repo', redis, {
   serializer: {
@@ -156,7 +169,6 @@ const repository = new ItemRepository<T>('json-repo', redis, {
   }
 })
 ```
-
 
 # License
 

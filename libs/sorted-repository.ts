@@ -92,7 +92,7 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
   }
 
   async getAll(): Promise<IItem<T>[]> {
-    const ids = await this.redis.zrange(this.keyPrefix, 0, -1)
+    const ids = await this.redis.zrange(this.keyPrefix, 0, '-1')
 
     return this.fetch(ids)
   }
@@ -127,7 +127,7 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
     if (order === 'desc') {
       tx.zrevrange(this.keyPrefix, start, end)
     } else {
-      tx.zrange(this.keyPrefix, start, end)
+      tx.zrange(this.keyPrefix, start, String(end))
     }
     const [count, ids] = (await this.exec(tx)) as [number, string[]]
 
@@ -146,7 +146,7 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
       const ids =
         order === 'desc'
           ? await this.redis.zrevrange(this.keyPrefix, start, end)
-          : await this.redis.zrange(this.keyPrefix, start, end)
+          : await this.redis.zrange(this.keyPrefix, start, String(end))
       for (const item of await this.fetch(ids)) {
         yield item
       }
@@ -156,7 +156,7 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
 
   async deletePage(page: number, pageSize: number): Promise<void> {
     const [start, end] = pageBounds(page, pageSize)
-    const ids = await this.redis.zrange(this.keyPrefix, start, end)
+    const ids = await this.redis.zrange(this.keyPrefix, start, String(end))
     await this.deleteByIds(ids)
   }
 
@@ -188,7 +188,7 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
 
   async trimToSize(maxItems: number): Promise<number> {
     assertNonNegativeInteger(maxItems, 'maxItems')
-    const ids = await this.redis.zrange(this.keyPrefix, 0, -(maxItems + 1))
+    const ids = await this.redis.zrange(this.keyPrefix, 0, String(-(maxItems + 1)))
 
     return this.deleteByIds(ids)
   }
@@ -209,7 +209,7 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
   async getFirstNItems(n: number): Promise<IItem<T>[]> {
     assertNonNegativeInteger(n, 'n')
     if (n === 0) return []
-    const ids = await this.redis.zrange(this.keyPrefix, 0, n - 1)
+    const ids = await this.redis.zrange(this.keyPrefix, 0, String(n - 1))
 
     return this.fetch(ids)
   }
@@ -225,7 +225,7 @@ export class SortedItemRepository<T> implements ISortedItemRepository<T> {
   async getItemsInRange(start: number, end: number): Promise<IItem<T>[]> {
     assertInteger(start, 'start')
     assertInteger(end, 'end')
-    const ids = await this.redis.zrange(this.keyPrefix, start, end)
+    const ids = await this.redis.zrange(this.keyPrefix, start, String(end))
 
     return this.fetch(ids)
   }

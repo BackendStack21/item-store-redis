@@ -7,14 +7,14 @@ jobs:
       redis:
         image: redis
         ports:
-        - 6379:6379
+          - 6379:6379
         options: --entrypoint redis-server
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - name: Setup Environment (Bun latest)
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -26,4 +26,3 @@ jobs:
 
       - name: Run tests
         run: bun run test
-        
