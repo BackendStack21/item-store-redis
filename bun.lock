@@ -1,0 +1,77 @@
+{
+  "lockfileVersion": 2,
+  "configVersion": 0,
+  "workspaces": {
+    "": {
+      "name": "item-store-redis",
+      "dependencies": {
+        "@msgpack/msgpack": "^2.8.0",
+        "ioredis": "^5.3.1",
+      },
+      "devDependencies": {
+        "@types/msgpack-lite": "^0.1.8",
+        "bun-types": "^0.5.6",
+        "msgpack-lite": "^0.1.26",
+        "rome": "^11.0.0",
+        "typescript": "^4.9.5",
+      },
+    },
+  },
+  "packages": {
+    "@ioredis/commands": ["@ioredis/commands@1.2.0", "", {}, ""],
+
+    "@msgpack/msgpack": ["@msgpack/msgpack@2.8.0", "", {}, ""],
+
+    "@rometools/cli-darwin-arm64": ["@rometools/cli-darwin-arm64@11.0.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-F3vkdY+s3FLIEnAjSbyHTuIPB88cLpccimW4ecid5I7S6GzGG3iUJI4xT00JhH73K4P/qW20/9r+kH1T9Du8Xg=="],
+
+    "@rometools/cli-darwin-x64": ["@rometools/cli-darwin-x64@11.0.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-X6jhtS6Iml4GOzgNtnLwIp/KXXhSdqeVyfv69m/AHnIzx3gQAjPZ7BPnJLvTCbhe4SKHL+uTZYFSCJpkUUKE6w=="],
+
+    "@rometools/cli-linux-arm64": ["@rometools/cli-linux-arm64@11.0.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-dktTJJlTpmycBZ2TwhJBcAO8ztK8DdevdyZnFFxdYRvtmJgTjIsC2UFayf/SbKew8B8q1IhI0it+D6ihAeIpeg=="],
+
+    "@rometools/cli-linux-x64": ["@rometools/cli-linux-x64@11.0.0", "", { "os": "linux", "cpu": "x64" }, "sha512-WVcnXPNdWGUWo0p4NU8YzuthjYR7q+b4vRcjdxtP1DlpphZmSsoC/RSE85nEqRAz8hChcKUansVzOPM8BSsuGA=="],
+
+    "@rometools/cli-win32-arm64": ["@rometools/cli-win32-arm64@11.0.0", "", { "os": "win32", "cpu": "arm64" }, "sha512-tPj6RThQzS7Q45jqQll7NlTYvNcsg/BEP3LYiiazqSh9FAFnMkrV6ewUcMPKWyAfiyLs7jlz4rRvdNRUSygzfQ=="],
+
+    "@rometools/cli-win32-x64": ["@rometools/cli-win32-x64@11.0.0", "", { "os": "win32", "cpu": "x64" }, "sha512-bmBai8WHxYjsGk1+je7ZTfCUCWq30WJI3pQM8pzTA674lfGTZ9ymJoZwTaIMSO4rL5V9mlO6uLunsBKso9VqOg=="],
+
+    "@types/msgpack-lite": ["@types/msgpack-lite@0.1.8", "", { "dependencies": { "@types/node": "*" } }, ""],
+
+    "@types/node": ["@types/node@18.15.0", "", {}, ""],
+
+    "bun-types": ["bun-types@0.5.6", "", {}, ""],
+
+    "cluster-key-slot": ["cluster-key-slot@1.1.2", "", {}, ""],
+
+    "debug": ["debug@4.3.4", "", { "dependencies": { "ms": "2.1.2" } }, ""],
+
+    "denque": ["denque@2.1.0", "", {}, ""],
+
+    "event-lite": ["event-lite@0.1.3", "", {}, ""],
+
+    "ieee754": ["ieee754@1.2.1", "", {}, ""],
+
+    "int64-buffer": ["int64-buffer@0.1.10", "", {}, ""],
+
+    "ioredis": ["ioredis@5.3.1", "", { "dependencies": { "@ioredis/commands": "^1.1.1", "cluster-key-slot": "^1.1.0", "debug": "^4.3.4", "denque": "^2.1.0", "lodash.defaults": "^4.2.0", "lodash.isarguments": "^3.1.0", "redis-errors": "^1.2.0", "redis-parser": "^3.0.0", "standard-as-callback": "^2.1.0" } }, ""],
+
+    "isarray": ["isarray@1.0.0", "", {}, ""],
+
+    "lodash.defaults": ["lodash.defaults@4.2.0", "", {}, ""],
+
+    "lodash.isarguments": ["lodash.isarguments@3.1.0", "", {}, ""],
+
+    "ms": ["ms@2.1.2", "", {}, ""],
+
+    "msgpack-lite": ["msgpack-lite@0.1.26", "", { "dependencies": { "event-lite": "^0.1.1", "ieee754": "^1.1.8", "int64-buffer": "^0.1.9", "isarray": "^1.0.0" }, "bin": { "msgpack": "bin/msgpack" } }, ""],
+
+    "redis-errors": ["redis-errors@1.2.0", "", {}, ""],
+
+    "redis-parser": ["redis-parser@3.0.0", "", { "dependencies": { "redis-errors": "^1.0.0" } }, ""],
+
+    "rome": ["rome@11.0.0", "", { "optionalDependencies": { "@rometools/cli-darwin-arm64": "11.0.0", "@rometools/cli-darwin-x64": "11.0.0", "@rometools/cli-linux-arm64": "11.0.0", "@rometools/cli-linux-x64": "11.0.0", "@rometools/cli-win32-arm64": "11.0.0", "@rometools/cli-win32-x64": "11.0.0" }, "bin": { "rome": "bin/rome" } }, "sha512-rRo6JOwpMLc3OkeTDRXkrmrDqnxDvZ75GS4f0jLDBNmRgDXWbu0F8eVnJoRn+VbK2AE7vWvhVOMBjnWowcopkQ=="],
+
+    "standard-as-callback": ["standard-as-callback@2.1.0", "", {}, ""],
+
+    "typescript": ["typescript@4.9.5", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, ""],
+  }
+}
